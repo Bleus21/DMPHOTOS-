@@ -20,7 +20,16 @@ print("=== DMPHOTOS BOT STARTED ===", flush=True)
 # ============================================================
 # BOT NAAM        : DMPhotos
 # PYTHON FILE     : dmphotos_reposter.py
-# ENV_USERNAME = "BSKY_USERNAME"
+# WORKFLOW FILES  :
+#   .github/workflows/dmphotos_03.yml
+#   .github/workflows/dmphotos_33.yml
+#
+# GITHUB SECRETS:
+#   BSKY_USERNAME_DMPHOTOS
+#   BSKY_PASSWORD_DMPHOTOS
+# ============================================================
+
+ENV_USERNAME = "BSKY_USERNAME"
 ENV_PASSWORD = "BSKY_PASSWORD"
 
 STATE_FILE = os.getenv("STATE_FILE", "state_dmphotos.json")
