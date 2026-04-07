@@ -880,3 +880,275 @@ def main():
         )
         if cleaned:
             log(f"🧹 Cleanup done: {cleaned}")
+feed_uris: List[Tuple[str, Dict, str]] = []
+    for key, obj in FEEDS.items():
+        if int(obj.get("enabled", 0)) != 1:
+            continue
+        link = (obj.get("link") or "").strip()
+        if not link:
+            continue
+        uri = normalize_feed_uri(client, link)
+        if uri:
+            feed_uris.append((key, obj, uri))
+        else:
+            log(f"⚠️ Feed ongeldig (skip): {key} -> {link}")
+
+    list_uris: List[Tuple[str, Dict, str]] = []
+    for key, obj in LIJSTEN.items():
+        if int(obj.get("enabled", 0)) != 1:
+            continue
+        link = (obj.get("link") or "").strip()
+        if not link:
+            continue
+        uri = normalize_list_uri(client, link)
+        if uri:
+            list_uris.append((key, obj, uri))
+        else:
+            log(f"⚠️ Lijst ongeldig (skip): {key} -> {link}")
+
+    excl_uris: List[Tuple[str, Dict, str]] = []
+    for key, obj in EXCLUDE_LISTS.items():
+        link = (obj.get("link") or "").strip()
+        if not link:
+            continue
+        uri = normalize_list_uri(client, link)
+        if uri:
+            excl_uris.append((key, obj, uri))
+        else:
+            log(f"⚠️ Exclude lijst ongeldig (skip): {key} -> {link}")
+
+    exclude_handles: Set[str] = set()
+    exclude_dids: Set[str] = set()
+    for key, obj, luri in excl_uris:
+        note = obj.get("note", "")
+        log(f"🚫 Loading exclude list: {key} ({note})")
+        members = fetch_list_members(client, luri, limit=max(1000, LIST_MEMBER_LIMIT))
+        log(f"🚫 Exclude members: {len(members)}")
+        for h, d in members:
+            if h:
+                exclude_handles.add(h)
+            if d:
+                exclude_dids.add(d)
+
+    all_candidates: List[Dict] = []
+
+    log(f"Feeds to process: {len(feed_uris)}")
+    for key, obj, furi in feed_uris:
+        note = obj.get("note", "")
+        log(f"📥 Feed: {key} ({note})")
+
+        items = fetch_feed_items(client, furi, max_items=FEED_MAX_ITEMS)
+        cands = build_candidates_from_feed_items(
+            items=items,
+            cutoff=cutoff,
+            exclude_handles=exclude_handles,
+            exclude_dids=exclude_dids,
+            allow_posts=int(obj.get("allow_posts", 1)),
+            allow_replies=int(obj.get("allow_replies", 0)),
+            allow_reposts=int(obj.get("allow_reposts", 0)),
+            force_refresh=False,
+            promo_bucket=None,
+        )
+        all_candidates.extend(cands)
+
+    log(f"Lists to process: {len(list_uris)}")
+    for key, obj, luri in list_uris:
+        note = obj.get("note", "")
+        members = fetch_list_members(client, luri, limit=max(1000, LIST_MEMBER_LIMIT))
+        total_accounts = len(members)
+        active_accounts = 0
+
+        tag = ""
+        if key == PROMO_RANDOM_LIST_KEY:
+            tag = " [PROMO RANDOM]"
+        elif key == PROMO_LATEST_LIST_KEY:
+            tag = " [PROMO LATEST]"
+
+        log(f"📋 List: {key} ({note}){tag} -> {total_accounts} accounts")
+
+        for h, d in members:
+            actor = d or h
+            if not actor:
+                continue
+
+            if key == PROMO_RANDOM_LIST_KEY:
+                author_items = fetch_author_feed(client, actor, PROMO_FETCH_PER_MEMBER)
+                cand = pick_random_weighted_candidate(
+                    author_items,
+                    exclude_handles,
+                    exclude_dids,
+                    PROMO_RANDOM_POOL,
+                )
+                if cand and not uri_in_cooldown(cand["uri"], post_last_reposted_at, POST_COOLDOWN_HOURS):
+                    cand["promo_bucket"] = "promo_random"
+                    all_candidates.append(cand)
+                    active_accounts += 1
+
+            elif key == PROMO_LATEST_LIST_KEY:
+                author_items = fetch_author_feed(client, actor, PROMO_FETCH_PER_MEMBER)
+                cand = pick_latest_candidate(
+                    author_items,
+                    exclude_handles,
+                    exclude_dids,
+                    "promo_latest",
+                )
+                if cand and not uri_in_cooldown(cand["uri"], post_last_reposted_at, POST_COOLDOWN_HOURS):
+                    all_candidates.append(cand)
+                    active_accounts += 1
+
+            else:
+                author_items = fetch_author_feed(client, actor, AUTHOR_POSTS_PER_MEMBER)
+                cands = build_candidates_from_feed_items(
+                    items=author_items,
+                    cutoff=cutoff,
+                    exclude_handles=exclude_handles,
+                    exclude_dids=exclude_dids,
+                    allow_posts=int(obj.get("allow_posts", 1)),
+                    allow_replies=int(obj.get("allow_replies", 0)),
+                    allow_reposts=int(obj.get("allow_reposts", 0)),
+                    force_refresh=False,
+                    promo_bucket=None,
+                )
+                if cands:
+                    active_accounts += 1
+                    all_candidates.extend(cands)
+
+        if total_accounts >= 1400:
+            log(f"⚠️ {key} bijna limiet: {total_accounts} accounts")
+        elif total_accounts >= 1000:
+            log(f"⚠️ {key} groot: {total_accounts} accounts")
+
+        log(f"📊 {key}: total_accounts={total_accounts} | active_accounts={active_accounts}")
+
+    active_hashtags = [h.strip() for h in HASHTAGS if h.strip()]
+    log(f"Hashtags to process: {len(active_hashtags)}")
+    for query in active_hashtags:
+        log(f"🔎 Hashtag search: {query}")
+        posts = fetch_hashtag_posts(client, query, HASHTAG_MAX_ITEMS)
+        log(f"Hashtag posts fetched for {query}: {len(posts)}")
+        all_candidates.extend(
+            build_candidates_from_postviews(posts, cutoff, exclude_handles, exclude_dids)
+        )
+
+    if SELF_RANDOM.get("enabled", 0) == 1:
+        self_cand = build_self_random_candidate(
+            client=client,
+            me_did=me,
+            exclude_handles=exclude_handles,
+            exclude_dids=exclude_dids,
+            pool_size=int(SELF_RANDOM.get("pool_size", 25)),
+            self_random_history=self_random_history,
+        )
+        if self_cand and not uri_in_cooldown(self_cand["uri"], post_last_reposted_at, POST_COOLDOWN_HOURS):
+            all_candidates.append(self_cand)
+            log("🎲 Self-random candidate toegevoegd")
+seen: Set[str] = set()
+    deduped: List[Dict] = []
+    for c in all_candidates:
+        uri = c.get("uri")
+        if not uri or uri in seen:
+            continue
+        seen.add(uri)
+        deduped.append(c)
+
+    normal_cands = [c for c in deduped if not c.get("promo_bucket")]
+    promo_latest_cands = [c for c in deduped if c.get("promo_bucket") == "promo_latest"]
+    promo_random_cands = [c for c in deduped if c.get("promo_bucket") == "promo_random"]
+    self_random_cands = [c for c in deduped if c.get("promo_bucket") == "self_random"]
+
+    normal_cands.sort(key=lambda x: x["created"])
+    promo_latest_cands.sort(key=lambda x: x["created"])
+    promo_random_cands.sort(key=lambda x: x["created"])
+    self_random_cands.sort(key=lambda x: x["created"])
+
+    normal_cands = apply_anti_cluster(normal_cands)
+
+    log(
+        "🧩 Candidates total: "
+        f"{len(deduped)} | normal={len(normal_cands)} "
+        f"| promo_latest={len(promo_latest_cands)} "
+        f"| promo_random={len(promo_random_cands)} "
+        f"| self_random={len(self_random_cands)}"
+    )
+
+    total_done = 0
+    per_user_count: Dict[str, int] = {}
+
+    buckets = {
+        "normal": normal_cands,
+        "promo_latest": promo_latest_cands,
+        "promo_random": promo_random_cands,
+        "self_random": self_random_cands,
+    }
+
+    ordered_groups = sorted(
+        [(k, v) for k, v in PROCESS_ORDER.items() if v > 0],
+        key=lambda x: x[1]
+    )
+
+    group_posted_count: Dict[str, int] = {k: 0 for k in buckets.keys()}
+
+    for group_name, _ in ordered_groups:
+        group = buckets.get(group_name, [])
+
+        for c in group:
+            if total_done >= MAX_PER_RUN:
+                break
+
+            is_promo = group_name != "normal"
+            ak = c["author_key"]
+
+            if not is_promo:
+                per_user_count.setdefault(ak, 0)
+                if per_user_count[ak] >= MAX_PER_USER:
+                    continue
+
+            ok = repost_and_like(
+                client=client,
+                me=me,
+                subject_uri=c["uri"],
+                subject_cid=c["cid"],
+                repost_records=repost_records,
+                like_records=like_records,
+                force_refresh=is_promo,
+            )
+
+            if ok:
+                total_done += 1
+                group_posted_count[group_name] += 1
+                post_last_reposted_at[c["uri"]] = dt_to_iso(utcnow())
+
+                if not is_promo:
+                    per_user_count[ak] += 1
+
+                if group_name == "self_random":
+                    self_random_history.append(c["uri"])
+                    self_random_history = self_random_history[-10:]
+
+                log(f"Repost [{group_name}]: {c['uri']}")
+                time.sleep(SLEEP_SECONDS)
+
+    log(
+        "Posted per group: "
+        + " | ".join(f"{k}={group_posted_count.get(k, 0)}" for k in buckets.keys())
+    )
+
+    state["repost_records"] = repost_records
+    state["like_records"] = like_records
+    state["post_last_reposted_at"] = post_last_reposted_at
+    state["self_random_history"] = self_random_history
+
+    save_state(STATE_FILE, state)
+
+    log(f"🔥 Done — total reposts this run: {total_done}")
+
+
+if __name__ == "__main__":
+    try:
+        print("=== ABOUT TO CALL MAIN ===", flush=True)
+        main()
+    except Exception:
+        import traceback
+        print("=== FATAL ERROR ===", flush=True)
+        traceback.print_exc()
+        raise
