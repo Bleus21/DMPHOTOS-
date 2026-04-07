@@ -1043,7 +1043,7 @@ def main():
         if self_cand and not uri_in_cooldown(self_cand["uri"], post_last_reposted_at, POST_COOLDOWN_HOURS):
             all_candidates.append(self_cand)
             log("🎲 Self-random candidate toegevoegd")
-seen: Set[str] = set()
+    seen: Set[str] = set()
     deduped: List[Dict] = []
     for c in all_candidates:
         uri = c.get("uri")
