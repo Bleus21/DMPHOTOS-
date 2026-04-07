@@ -36,7 +36,7 @@ print("=== DMPHOTOS BOT STARTED ===", flush=True)
 # ============================================================
 
 FEEDS = {
-    "feed 1": {"link": "https://bsky.app/profile/did:plc:jaka644beit3x4vmmg6yysw7/feed/aaae6jfc5w2oi", "note": "redfox", "enabled": 1, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1},
+    "feed 1": {"link": "https://bsky.app/profile/did:plc:jaka644beit3x4vmmg6yysw7/feed/aaae6jfc5w2oi", "note": "redfox", "enabled": 1, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 0},
     "feed 2": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1},
 
     "feed 3": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 0, "allow_reposts": 0},
