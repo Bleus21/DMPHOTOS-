@@ -65,10 +65,10 @@ LIJSTEN = {
     "lijst 8": {"link": "", "note": "", "enabled": 0},
 
     # PROMO RANDOM
-    "lijst 9": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwek2ytgh2b", "note": "PROMO RANDOM", "enabled": 0},
+    "lijst 9": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwek2ytgh2b", "note": "PROMO RANDOM", "enabled": 1},
 
     # PROMO LATEST
-    "lijst 10": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwelc6uvb22", "note": "PROMO LATEST", "enabled": 0},
+    "lijst 10": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwelc6uvb22", "note": "PROMO LATEST", "enabled": 1},
 }
 
 
