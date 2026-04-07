@@ -36,7 +36,8 @@ print("=== DMPHOTOS BOT STARTED ===", flush=True)
 # ============================================================
 
 FEEDS = {
-    "feed 1": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1},
+    "feed 1": {"link": "https://bsky.app/profile/did:plc:jaka644beit3x4vmmg6yysw7/feed/aaae6jfc5w2oi", "note": "redfox", "enabled": 0, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1
+0},
     "feed 2": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1},
 
     "feed 3": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 0, "allow_reposts": 0},
@@ -55,8 +56,8 @@ FEEDS = {
 # ============================================================
 
 LIJSTEN = {
-    "lijst 1": {"link": "", "note": "", "enabled": 0},
-    "lijst 2": {"link": "", "note": "", "enabled": 0},
+    "lijst 1": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwepgkt4i2b", "note": "accounts repost", "enabled": 0},
+    "lijst 2": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miweq3f2on2s", "note": "contentcreators", "enabled": 0},
     "lijst 3": {"link": "", "note": "", "enabled": 0},
     "lijst 4": {"link": "", "note": "", "enabled": 0},
     "lijst 5": {"link": "", "note": "", "enabled": 0},
@@ -65,10 +66,10 @@ LIJSTEN = {
     "lijst 8": {"link": "", "note": "", "enabled": 0},
 
     # PROMO RANDOM
-    "lijst 9": {"link": "", "note": "PROMO RANDOM", "enabled": 0},
+    "lijst 9": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwek2ytgh2b", "note": "PROMO RANDOM", "enabled": 0},
 
     # PROMO LATEST
-    "lijst 10": {"link": "", "note": "PROMO LATEST", "enabled": 0},
+    "lijst 10": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwelc6uvb22", "note": "PROMO LATEST", "enabled": 0},
 }
 
 
