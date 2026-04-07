@@ -507,6 +507,7 @@ def build_candidates_from_postviews(
 
     cands.sort(key=lambda x: x["created"])
     return cands
+
 def pick_random_weighted_candidate(
     items: List,
     exclude_handles: Set[str],
