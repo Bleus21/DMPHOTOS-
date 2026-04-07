@@ -881,7 +881,7 @@ def main():
         )
         if cleaned:
             log(f"🧹 Cleanup done: {cleaned}")
-feed_uris: List[Tuple[str, Dict, str]] = []
+    feed_uris: List[Tuple[str, Dict, str]] = []
     for key, obj in FEEDS.items():
         if int(obj.get("enabled", 0)) != 1:
             continue
