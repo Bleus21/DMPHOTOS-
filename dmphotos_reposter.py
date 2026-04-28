@@ -108,7 +108,7 @@ SELF_RANDOM = {
 # ============================================================
 
 HASHTAGS = [
-    "",
+    "#bskypromo",
     "",
     "",
 ]
@@ -119,7 +119,7 @@ HASHTAGS = [
 # ============================================================
 
 EXCLUDE_LISTS = {
-    "exclude 1": {"link": "", "note": ""},
+    "exclude 1": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3mkl4yhuimg2b", "note": "bskypromo stop"},
     "exclude 2": {"link": "", "note": ""},
 }
 
