@@ -67,8 +67,8 @@ FEEDS = {
 # ============================================================
 
 LIJSTEN = {
-    "lijst 1": {"link": "", "note": "", "enabled": 1},
-    "lijst 2": {"link": "", "note": "", "enabled": 1},
+    "lijst 1": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miwepgkt4i2b", "repost accounts": "", "enabled": 1},
+    "lijst 2": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/lists/3miweq3f2on2s", "note": "contentcreaters", "enabled": 1},
     "lijst 3": {"link": "", "note": "", "enabled": 0},
     "lijst 4": {"link": "", "note": "", "enabled": 0},
     "lijst 5": {"link": "", "note": "", "enabled": 0},
