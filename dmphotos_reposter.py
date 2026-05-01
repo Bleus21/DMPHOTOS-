@@ -48,7 +48,7 @@ STATE_FILE = os.getenv("STATE_FILE", "state_dmphotos.json")
 # ============================================================
 
 FEEDS = {
-    "feed 1": {"link": "", "note": "", "enabled": 1, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 0},
+    "feed 1": {"link": "https://bsky.app/profile/did:plc:cxrt7ggxkamgzxa47cggtees/feed/aaaoirmgh53zw", "note": "redfoxofficial", "enabled": 1, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 0},
     "feed 2": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 1, "allow_reposts": 1},
 
     "feed 3": {"link": "", "note": "", "enabled": 0, "allow_posts": 1, "allow_replies": 0, "allow_reposts": 0},
