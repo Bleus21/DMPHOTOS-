@@ -1,29 +1,26 @@
-name: DMPhotos Bot 03
+name: DMPhotos 03
 
 on:
   schedule:
     - cron: "3 * * * *"
   workflow_dispatch:
 
+concurrency:
+  group: dmphotos-state
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
-concurrency:
-  group: dmphotosbot
-  cancel-in-progress: false
-
 jobs:
-  run:
+  run-bot:
     runs-on: ubuntu-latest
 
-    env:
-      BSKY_USERNAME: ${{ secrets.BSKY_USERNAME_DMPHOTOS }}
-      BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD_DMPHOTOS }}
-      STATE_FILE: state_dmphotos.json
-
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,22 +29,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install atproto
 
       - name: Run DMPhotos bot
-        run: python dmphotos_reposter.py
+        env:
+          BSKY_USERNAME: ${{ secrets.BSKY_USERNAME_DMPHOTOS }}
+          BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD_DMPHOTOS }}
+          STATE_FILE: state_dmphotos.json
+        run: |
+          python dmphotos_reposter.py
 
-      - name: Commit state file
+      - name: Commit state
         if: always()
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          if [ -f state_dmphotos.json ]; then
-            git add state_dmphotos.json
-            git diff --cached --quiet || git commit -m "Update DMPhotos state"
-            git push
-          else
-            echo "No state file found"
+          git add state_dmphotos.json
+
+          if git diff --cached --quiet; then
+            echo "No state changes"
+            exit 0
           fi
+
+          git commit -m "Update DMPhotos state"
+
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "Push failed, retry $i..."
+            sleep 5
+          done
